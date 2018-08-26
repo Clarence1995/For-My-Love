@@ -1,0 +1,21 @@
+mylove: Zhangwenfeng
+
+# 日期格式化
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Chongqing
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/mylove?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    username: root
+    password: root
+logging:
+  config: classpath:config/logback-clarence.xml
+
+clarencezero:
+  accesskey: YoLMyWqJhWRp34ojSRLYSg7kpr0R_idsGEoKmzr7
+  secretkey: IetcQYBCIM7LvFs0CMfESrwpk0VKysaK-yN5WQhO
+  bucket: mylove
+  origin: http://pc0mzxtgc.bkt.clouddn.com/

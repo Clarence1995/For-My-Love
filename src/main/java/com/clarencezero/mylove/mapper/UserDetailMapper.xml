@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clarencezero.mylove.mapper.UserDetailMapper">
+    <resultMap id="BaseResultMap" type="com.clarencezero.mylove.config.springsecurity.JWTUserDetails">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="phone" property="phone"/>
+        <result column="telephone" property="telephone"/>
+        <result column="address" property="address"/>
+        <result column="enabled" property="enabled"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="userface" property="userface"/>
+        <result column="remark" property="remark"/>
+    </resultMap>
+
+    <resultMap id="lazyLoadRoles"
+               type="com.clarencezero.mylove.config.springsecurity.JWTUserDetails"
+               extends="BaseResultMap">
+        <collection property="roles"
+                    ofType="com.clarencezero.mylove.entity.dao.Role"
+                    select="com.clarencezero.mylove.mapper.UserDetailMapper.getRolesByUserId"
+                    column="id">
+        </collection>
+    </resultMap>
+
+    <resultMap id="eagerLoadRoles"
+               type="com.clarencezero.mylove.config.springsecurity.JWTUserDetails"
+               extends="BaseResultMap">
+        <collection property="roles"
+                    ofType="com.clarencezero.mylove.entity.dao.Role">
+            <id property="id" column="rid"/>
+            <result property="name" column="rname"/>
+            <result property="namezh" column="rnameZh"/>
+        </collection>
+    </resultMap>
+
+    <select id="loadUserByUsername" resultMap="lazyLoadRoles">
+        SELECT *
+        FROM love_sys_user
+        WHERE username = #{username};
+    </select>
+
+    <select id="getRolesByUserId" resultType="com.clarencezero.mylove.entity.dao.Role">
+        SELECT r.*
+        FROM love_sys_user_role h, love_sys_role r
+        WHERE h.roleId= r.id AND h.userId = #{id}
+    </select>
+    <insert id="userRegistration">
+        INSERT INTO love_sys_user
+        set username = #{username}, password = #{password}
+    </insert>
+    <select id="getUserByKeyWords" resultMap="eagerLoadRoles">
+        select h.*,`r`.`id` AS `rid`,`r`.`name` AS `rname`,`r`.`nameZh` AS `rnameZh` from ((`hr` `h` left join `hr_role`
+        `h_r` on ((`h`.`id` = `h_r`.`hrid`))) left join `role` `r` on ((`h_r`.`rid` = `r`.`id`))) where h.`id` not
+        in(select h_r.`hrid` from hr_role h_r,role r where h_r.`rid`=r.`id` and r.`nameZh`='系统管理员')
+        <if test="keywords!='all' and keywords!=''">
+            and h.`name` like concat('%',#{keywords},'%')
+        </if>
+        order by h.`id` limit 10
+    </select>
+    <select id="getHrById" resultMap="eagerLoadRoles">
+        select
+            h.*,
+            `r`.`id`     AS `rid`,
+            `r`.`name`   AS `rname`,
+            `r`.`nameZh` AS `rnameZh`
+        from ((`hr` `h` left join `hr_role`
+                                  `h_r` on ((`h`.`id` = `h_r`.`hrid`))) left join `role` `r`
+                on ((`h_r`.`rid` = `r`.`id`)))
+        where h.`id` = #{hrId}
+    </select>
+    <update id="updateUser" parameterType="com.clarencezero.mylove.config.springsecurity.JWTUserDetails">
+        UPDATE love_sys_user
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                phone = #{phone,jdbcType=CHAR},
+            </if>
+            <if test="telephone != null">
+                telephone = #{telephone,jdbcType=VARCHAR},
+            </if>
+            <if test="address != null">
+                address = #{address,jdbcType=VARCHAR},
+            </if>
+            <if test="enabled != null">
+                enabled = #{enabled,jdbcType=BIT},
+            </if>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="userface != null">
+                userface = #{userface,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <delete id="deleteRoleByUserId" parameterType="Long">
+        DELETE FROM love_sys_user_role
+        where user_id = #{userId}
+    </delete>
+    <insert id="addRolesForUser">
+        INSERT INTO love_sys_user_role(user_id, role_id)
+        VALUES
+        <foreach collection="rids" separator="," item="rid">
+            (#{userId},#{rid})
+        </foreach>
+    </insert>
+    <delete id="deleteUserByid" parameterType="Long">
+        DELETE FROM love_sys_user
+        WHERE id = #{userId}
+    </delete>
+    <select id="getAllUser" resultType="com.clarencezero.mylove.config.springsecurity.JWTUserDetails">
+        select * from love_sys_user
+        <if test="currentId!=null">
+            WHERE id !=#{currentId}
+        </if>
+    </select>
+</mapper>
